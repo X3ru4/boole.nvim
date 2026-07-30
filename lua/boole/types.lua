@@ -1,0 +1,7 @@
+---@meta
+---@alias boole.mappings { increment: string|nil, decrement:string|nil }
+---@class boole.config
+---@field presets string[]|nil
+---@field allow_caps_additions string[][]|nil
+---@field additions string[][]|nil
+---@field mappings boole.mappings|nil
