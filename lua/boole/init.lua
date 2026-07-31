@@ -43,74 +43,71 @@ function M.generate_presets(opts)
 	end
 end
 
+local feedkeys = vim.api.nvim_feedkeys
+local bang = 'nx'
+
+local function scan_line(start, line)
+	for i = 0, MAXIMUN_LOOP do
+		local cword = vim.call('expand', '<cword>')
+		local crow = vim.api.nvim_win_get_cursor(0)[1]
+
+		if tonumber(cword) or cword:find('%d') then
+			return
+		end
+
+		if start[1] < crow then
+			vim.api.nvim_win_set_cursor(0, start)
+			return
+		end
+
+		if replace_map.increment[cword] or replace_map.decrement[cword] then
+			return cword, line:find(cword, start[2])
+		end
+
+		if i == MAXIMUN_LOOP then
+			vim.api.nvim_win_set_cursor(0, start)
+			return
+		end
+
+		feedkeys('w', bang, false)
+	end
+end
+
 ---@param direction 'increment'|'decrement'
 function M.active(direction)
-	local line = vim.api.nvim_get_current_line()
+	v_count = vim.v.count
 	local start_pos = vim.api.nvim_win_get_cursor(0)
-	local correct_pos
+	local line = vim.api.nvim_get_current_line()
+	local match, correct_pos = scan_line(start_pos, line)
 
-	local function try_match()
-		for i = 0, MAXIMUN_LOOP do
-			local cword = vim.fn.expand('<cword>')
-			v_count = vim.v.count > 0 and vim.v.count or v_count
-
-			-- C-a and C-x already handle numbers, no need to try and
-			-- match them to out added values.
-			if tonumber(cword) or cword:find('%d') then
-				return false
+	if match then
+		if correct_pos then
+			feedkeys('b', bang, false)
+			local ccol = vim.api.nvim_win_get_cursor(0)[2] + 1
+			if match:sub(1, 1) == line:sub(ccol, ccol) then
+				goto continue
 			end
-
-			local current_pos = vim.api.nvim_win_get_cursor(0)
-			local ccol = current_pos[2] + 1
-
-			if i == MAXIMUN_LOOP or ccol == #line then
-				vim.api.nvim_win_set_cursor(0, start_pos)
-				return false
-			end
-
-			if start_pos[1] < current_pos[1] then
-				vim.api.nvim_win_set_cursor(0, start_pos)
-				return false
-			end
-
-			local match = direction == 'decrement' and replace_map.decrement[cword] or replace_map.increment[cword]
-
-			if match then
-				-- Force the cursor to move to the correct position.
-				if cword:sub(1, 1) ~= line:sub(ccol, ccol) then
-					correct_pos = line:find(cword, ccol)
-					if correct_pos and ccol < correct_pos then
-						vim.cmd('normal! w')
-						goto continue
-					end
-				end
-
-				for _ = 1, v_count do
-					match = direction == 'decrement' and replace_map.decrement[cword] or replace_map.increment[cword]
-					cword = match
-				end
-
-				v_count = 0
-				vim.cmd('normal! "_ciw' .. match)
-				vim.cmd('normal! b')
-				return true
-			end
-
-			vim.cmd('normal! w')
-			::continue::
+			vim.api.nvim_win_set_cursor(0, { start_pos[1], correct_pos })
 		end
-	end
 
-	-- Fallback to original <C-a> and <C-x> functions for numbers.
-	if not try_match() then
+		::continue::
+
+		for _ = 0, v_count do
+			match = direction == 'increment' and replace_map.increment[match] or replace_map.decrement[match]
+		end
+
+		feedkeys('"_ciw' .. match, bang, false)
+		feedkeys('b', bang, false)
+	else
+		-- Fallback to original <C-a> and <C-x> functions for numbers.
 		if direction == 'increment' then
-			vim.cmd('normal!' .. (v_count > 0 and v_count or '') .. '')
+			feedkeys((v_count > 0 and v_count or '') .. '', bang, false)
 		end
 		if direction == 'decrement' then
-			vim.cmd('normal!' .. (v_count > 0 and v_count or '') .. '')
+			feedkeys((v_count > 0 and v_count or '') .. '', bang, false)
 		end
-		v_count = 0
 	end
+	v_count = 0
 end
 
 ---Setup boole
@@ -146,8 +143,8 @@ function M.setup(opts)
 	end
 
 	opts.mappings = opts.mappings or {}
-	vim.keymap.set({ 'n', 'v' }, opts.mappings.increment or '<C-a>', '<Cmd>Boole increment<CR>')
-	vim.keymap.set({ 'n', 'v' }, opts.mappings.decrement or '<C-x>', '<Cmd>Boole decrement<CR>')
+	vim.keymap.set('n', opts.mappings.increment or '<C-a>', '<Cmd>Boole increment<CR>')
+	vim.keymap.set('n', opts.mappings.decrement or '<C-x>', '<Cmd>Boole decrement<CR>')
 end
 
 return M
