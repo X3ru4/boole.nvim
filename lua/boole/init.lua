@@ -1,5 +1,5 @@
 local M = {}
-local MAXIMUN_LOOP = 512
+local MAXIMUN_LOOP = 1024
 local replace_map = {
 	increment = {},
 	decrement = {},
@@ -48,15 +48,14 @@ local bang = 'nx'
 
 local function scan_line(start, line)
 	for i = 0, MAXIMUN_LOOP do
-		local cword = vim.call('expand', '<cword>')
-		local crow = vim.api.nvim_win_get_cursor(0)[1]
-
-		if tonumber(cword) or cword:find('%d') then
+		if start[1] < vim.api.nvim_win_get_cursor(0)[1] then
+			vim.api.nvim_win_set_cursor(0, start)
 			return
 		end
 
-		if start[1] < crow then
-			vim.api.nvim_win_set_cursor(0, start)
+		local cword = vim.call('expand', '<cword>')
+
+		if tonumber(cword) or cword:find('%d') then
 			return
 		end
 
@@ -78,26 +77,48 @@ function M.active(direction)
 	v_count = vim.v.count
 	local start_pos = vim.api.nvim_win_get_cursor(0)
 	local line = vim.api.nvim_get_current_line()
-	local match, correct_pos = scan_line(start_pos, line)
+	local match, match_start = scan_line(start_pos, line)
 
 	if match then
-		if correct_pos then
+		-- We need to move back to check because `match_start`
+		-- might be finding the wrong word.
+		-- Skip if only one character
+		if vim.str_utfindex(match, 'utf-32') > 1 then
 			feedkeys('b', bang, false)
-			local ccol = vim.api.nvim_win_get_cursor(0)[2] + 1
-			if match:sub(1, 1) == line:sub(ccol, ccol) then
-				goto continue
+		end
+		local col = vim.call('col', '.')
+		if match_start then
+			-- Get the first byte of the character.
+			local char_byte = vim.str_utf_end(match, 1)
+			if
+				match:sub(1, 1 + char_byte) == line:sub(col, col + char_byte)
+				and line:sub(start_pos[2] + 1, start_pos[2] + 1):find('%A')
+			then
+				match_start = col
 			end
-			vim.api.nvim_win_set_cursor(0, { start_pos[1], correct_pos })
+		else
+			match_start = col
 		end
 
-		::continue::
+		local cword = match
 
-		for _ = 0, v_count do
+		if v_count < 2 then
 			match = direction == 'increment' and replace_map.increment[match] or replace_map.decrement[match]
+		else
+			for _ = 1, v_count do
+				match = direction == 'increment' and replace_map.increment[match] or replace_map.decrement[match]
+			end
 		end
 
-		feedkeys('"_ciw' .. match, bang, false)
-		feedkeys('b', bang, false)
+		vim.api.nvim_buf_set_text(
+			0,
+			start_pos[1] - 1,
+			match_start - 1,
+			start_pos[1] - 1,
+			match_start + #cword - 1,
+			{ match }
+		)
+		vim.api.nvim_win_set_cursor(0, { start_pos[1], match_start - 1 })
 	else
 		-- Fallback to original <C-a> and <C-x> functions for numbers.
 		if direction == 'increment' then
@@ -126,8 +147,14 @@ function M.setup(opts)
 		return
 	end
 
-	if opts.presets then
-		M.generate_presets(opts.presets)
+	opts.mappings = opts.mappings or {}
+	vim.keymap.set('n', opts.mappings.increment or '<C-a>', '<Cmd>Boole increment<CR>')
+	vim.keymap.set('n', opts.mappings.decrement or '<C-x>', '<Cmd>Boole decrement<CR>')
+
+	if opts.additions then
+		for _, val in ipairs(opts.additions) do
+			M.generate(val)
+		end
 	end
 
 	if opts.allow_caps_additions then
@@ -136,15 +163,13 @@ function M.setup(opts)
 		end
 	end
 
-	if opts.additions then
-		for _, val in ipairs(opts.additions) do
-			M.generate(val)
-		end
+	if opts.maximun_move and opts.maximun_move > 1 then
+		MAXIMUN_LOOP = opts.maximun_move
 	end
 
-	opts.mappings = opts.mappings or {}
-	vim.keymap.set('n', opts.mappings.increment or '<C-a>', '<Cmd>Boole increment<CR>')
-	vim.keymap.set('n', opts.mappings.decrement or '<C-x>', '<Cmd>Boole decrement<CR>')
+	if opts.presets then
+		M.generate_presets(opts.presets)
+	end
 end
 
 return M

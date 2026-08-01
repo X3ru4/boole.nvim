@@ -5,3 +5,4 @@
 ---@field allow_caps_additions string[][]|nil
 ---@field additions string[][]|nil
 ---@field mappings boole.mappings|nil
+---@field maximun_move integer|nil Limit movement using the 'w' motion.
