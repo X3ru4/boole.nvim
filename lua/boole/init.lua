@@ -80,13 +80,15 @@ function M.active(direction)
 	local match, match_start = scan_line(start_pos, line)
 
 	if match then
-		-- We need to move back to check because `match_start`
-		-- might be finding the wrong word.
 		-- Skip if only one character
 		if vim.str_utfindex(match, 'utf-32') > 1 then
 			feedkeys('b', bang, false)
 		end
+
 		local col = vim.call('col', '.')
+
+		-- We need to move back to check because `match_start`
+		-- might be finding the wrong word.
 		if match_start then
 			-- Get the first byte of the character.
 			local char_byte = vim.str_utf_end(match, 1)
