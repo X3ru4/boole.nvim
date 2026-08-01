@@ -1,5 +1,4 @@
-boole.nvim 🔛
-=============
+# boole.nvim 🔛
 
 Boole is a simple Neovim plugin that extends the default increment and
 decrement functionality of CTRL-A and CTRL-X to allow for toggling
@@ -16,21 +15,25 @@ This plugin ships one command:
 This command can be safely mapped to CTRL-A and CTRL-X. See the
 configuration section below for an example.
 
-Installation
-------------
+* Changes compared to the original
+  * Refactor the code using modern APIs and simple logic.
+  * Optimize performance.
+  * Several issues have been fixed.
+  * Supports special characters.
+
+## Installation
 
 Using [lazy.nvim](https://github.com/folke/lazy.nvim)
 
 ```lua
 return {
-  "X3ru4/boole.nvim",
-  keys = { "<C-a>", "<C-x>" },
+  'X3ru4/boole.nvim',
+  keys = { '<C-a>', '<C-x>' },
   opts = {},
 }
 ```
 
-Configuration
--------------
+## Configuration
 
 Boole can be mapped to a key by passing a configuration table to the 
 `setup` function. You can also use the presets or add your own cycles.
@@ -38,24 +41,27 @@ Boole can be mapped to a key by passing a configuration table to the
 ```lua
 require('boole').setup({
   -- Use these presets if you don't need much configuration.
-  -- Valid presets: "boolean", "colors", "months", "weekdays"
+  -- Valid presets: 'boolean', 'colors', 'months', 'weekdays'
   presets = {
-    "boolean",
-    "colors",
+    'boolean',
+    'colors',
   -- ...
   },
   -- Default mappings.
   mappings = {
-    increment = "<C-a>",
-    decrement = "<C-x>",
+    increment = '<C-a>',
+    decrement = '<C-x>',
   },
   -- Define cycles
   additions = {
-    { "Foo", "Bar" },
-    { "tic", "tac", "toe" },
+    { 'Foo', 'Bar' },
+    { 'tic', 'tac', 'toe' },
+    -- Supports special characters
+    { '😭', '🤫' },
+    { '₹', '₫', '¶', 'Ω' },
   },
   allow_caps_additions = {
-    { "enable", "disable" },
+    { 'enable', 'disable' },
     -- enable → disable
     -- Enable → Disable
     -- ENABLE → DISABLE
