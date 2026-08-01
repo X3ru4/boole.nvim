@@ -98,7 +98,7 @@ function M.active(direction)
 			local char_byte = vim.str_utf_end(match, 1)
 			if
 				match:sub(1, 1 + char_byte) == line:sub(col, col + char_byte)
-				and line:sub(sta_col + 1, sta_col + 1):find('%A')
+				and not line:sub(sta_col + 1, sta_col + 1):find('%A')
 			then
 				match_start = col
 			end
