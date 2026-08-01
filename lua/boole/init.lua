@@ -134,9 +134,9 @@ end
 ---@param opts boole.config|nil
 function M.setup(opts)
 	vim.api.nvim_create_user_command('Boole', function(args)
-		local start = vim.uv.hrtime()
+		-- local start = vim.uv.hrtime()
 		M.active(args.args)
-		print('' .. (vim.uv.hrtime() - start) / 1000001)
+		-- print('' .. (vim.uv.hrtime() - start) / 1000001)
 	end, {
 		nargs = 1,
 		complete = function()
