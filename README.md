@@ -15,11 +15,12 @@ This plugin ships one command:
 This command can be safely mapped to CTRL-A and CTRL-X. See the
 configuration section below for an example.
 
-* Changes compared to the original
-  * Refactor the code using modern APIs and simple logic.
-  * Optimize performance.
-  * Several issues have been fixed.
-  * Supports special characters.
+Changes compared to the original
+
+* Refactor the code using modern APIs and simple logic.
+* Optimize performance.
+* Several issues have been fixed.
+* Supports special characters.
 
 ## Installation
 
