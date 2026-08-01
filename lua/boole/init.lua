@@ -44,27 +44,30 @@ function M.generate_presets(opts)
 end
 
 local feedkeys = vim.api.nvim_feedkeys
+local buf_set_text = vim.api.nvim_buf_set_text
+local get_cursor = vim.api.nvim_win_get_cursor
+local set_cursor = vim.api.nvim_win_set_cursor
+local expand = vim.fn.expand
 local bang = 'nx'
 
 local function scan_line(start, line)
 	for i = 0, MAXIMUN_LOOP do
-		if start[1] < vim.api.nvim_win_get_cursor(0)[1] then
-			vim.api.nvim_win_set_cursor(0, start)
+		if start[1] < get_cursor(0)[1] then
+			set_cursor(0, start)
 			return
 		end
 
-		local cword = vim.call('expand', '<cword>')
+		local cword = expand('<cword>')
 
 		if tonumber(cword) or cword:find('%d') then
 			return
 		end
-
 		if replace_map.increment[cword] or replace_map.decrement[cword] then
 			return cword, line:find(cword, start[2])
 		end
 
 		if i == MAXIMUN_LOOP then
-			vim.api.nvim_win_set_cursor(0, start)
+			set_cursor(0, start)
 			return
 		end
 
@@ -75,7 +78,8 @@ end
 ---@param direction 'increment'|'decrement'
 function M.active(direction)
 	v_count = vim.v.count
-	local start_pos = vim.api.nvim_win_get_cursor(0)
+	local start_pos = get_cursor(0)
+	local sta_ln, sta_col = start_pos[1], start_pos[2]
 	local line = vim.api.nvim_get_current_line()
 	local match, match_start = scan_line(start_pos, line)
 
@@ -85,7 +89,7 @@ function M.active(direction)
 			feedkeys('b', bang, false)
 		end
 
-		local col = vim.call('col', '.')
+		local col = get_cursor(0)[2] + 1
 
 		-- We need to move back to check because `match_start`
 		-- might be finding the wrong word.
@@ -94,7 +98,7 @@ function M.active(direction)
 			local char_byte = vim.str_utf_end(match, 1)
 			if
 				match:sub(1, 1 + char_byte) == line:sub(col, col + char_byte)
-				and line:sub(start_pos[2] + 1, start_pos[2] + 1):find('%A')
+				and line:sub(sta_col + 1, sta_col + 1):find('%A')
 			then
 				match_start = col
 			end
@@ -112,15 +116,8 @@ function M.active(direction)
 			end
 		end
 
-		vim.api.nvim_buf_set_text(
-			0,
-			start_pos[1] - 1,
-			match_start - 1,
-			start_pos[1] - 1,
-			match_start + #cword - 1,
-			{ match }
-		)
-		vim.api.nvim_win_set_cursor(0, { start_pos[1], match_start - 1 })
+		buf_set_text(0, sta_ln - 1, match_start - 1, sta_ln - 1, match_start + #cword - 1, { match })
+		set_cursor(0, { sta_ln, match_start - 1 })
 	else
 		-- Fallback to original <C-a> and <C-x> functions for numbers.
 		if direction == 'increment' then
@@ -137,7 +134,9 @@ end
 ---@param opts boole.config|nil
 function M.setup(opts)
 	vim.api.nvim_create_user_command('Boole', function(args)
+		local start = vim.uv.hrtime()
 		M.active(args.args)
+		print('' .. (vim.uv.hrtime() - start) / 1000001)
 	end, {
 		nargs = 1,
 		complete = function()
@@ -150,8 +149,8 @@ function M.setup(opts)
 	end
 
 	opts.mappings = opts.mappings or {}
-	vim.keymap.set('n', opts.mappings.increment or '<C-a>', '<Cmd>Boole increment<CR>')
-	vim.keymap.set('n', opts.mappings.decrement or '<C-x>', '<Cmd>Boole decrement<CR>')
+	vim.keymap.set({ 'n', 'x' }, opts.mappings.increment or '<C-a>', '<Cmd>Boole increment<CR>')
+	vim.keymap.set({ 'n', 'x' }, opts.mappings.decrement or '<C-x>', '<Cmd>Boole decrement<CR>')
 
 	if opts.additions then
 		for _, val in ipairs(opts.additions) do
