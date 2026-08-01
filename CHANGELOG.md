@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.2.0](https://github.com/X3ru4/boole.nvim/compare/v3.1.0...v3.2.0) (2026-08-01)
+
+
+### Features
+
+* **boole:** add maximun_move option and increase default loop limit ([a0ebf12](https://github.com/X3ru4/boole.nvim/commit/a0ebf122494bab3c1b4991b5db68a5c5a34ea817))
+* **boole:** add maximun_move option and increase default loop limit ([091adcc](https://github.com/X3ru4/boole.nvim/commit/091adcc83eba1e7f90af3bb2c672c25f6f1ab7b0))
+
 ## [3.1.0](https://github.com/X3ru4/boole.nvim/compare/v3.0.1...v3.1.0) (2026-07-30)
 
 
