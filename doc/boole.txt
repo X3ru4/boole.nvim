@@ -4,11 +4,11 @@
 CONTENTS                                          *boole-contents*
 
     1. Introduction ......................... |boole-introduction|
-    3. Commands ............................. |boole-commands|
-    4. Configuration ........................ |boole-config|
+    2. Configuration ........................ |boole-config|
+    3. Mappings ............................. |boole-mappings|
 
 ==============================================================================
-1. INTRODUCTION                               *boole-introduction*
+1. INTRODUCTION                                                *boole-introduction*
 
 Boole is a simple Neovim plugin that extends the default increment and
 decrement functionality of CTRL-A and CTRL-X to allow for toggling
@@ -19,14 +19,7 @@ boolean values like `on`, `yes`, and `true` as well as cycling through:
 * X11 / Web color names (e.g., `Orange` → `OrangeRed`)
 
 ==============================================================================
-2. COMMANDS                                                   *boole-commands*
-
-:Boole {increment|decrement}                                           *Boole*
-
-Toggle or cycle up or down.
-
-==============================================================================
-3. CONFIGURATION                                                 *boole-config*
+2. CONFIGURATION                                                *boole-config*
 
 Boole can be mapped to a key by passing a configuration table to the 
 `setup` function. You can also use the presets or add your own cycles.
@@ -34,29 +27,49 @@ Boole can be mapped to a key by passing a configuration table to the
 >lua
   require('boole').setup({
     -- Use these presets if you don't need much configuration.
-    -- Valid presets: "boolean", "colors", "months", "weekdays"
+    -- Valid presets: 'boolean', 'colors', 'months', 'weekdays'
     presets = {
-      "boolean",
-      "colors",
+      'boolean',
+      'colors',
     -- ...
     },
-    -- Default mappings.
-    mappings = {
-      increment = "<C-a>",
-      decrement = "<C-x>",
-    },
+    -- The default mappings are `g?<C-a>` and `g?<C-x>`
+    use_default_mappings = true,
     -- Define cycles
     additions = {
-      { "Foo", "Bar" },
-      { "tic", "tac", "toe" },
+      { 'Foo', 'Bar' },
+      { 'tic', 'tac', 'toe' },
+      -- Supports special characters
+      { '😭', '🤫' },
+      { '₹', '₫', '¶', 'Ω' },
     },
     allow_caps_additions = {
-      { "enable", "disable" },
+      { 'enable', 'disable' },
       -- enable → disable
       -- Enable → Disable
       -- ENABLE → DISABLE
     },
   })
+<
+
+==============================================================================
+3. Mappings                                              *boole-mappings*
+
+Default mappings
+
+>lua
+  local boole = require('boole')
+  local mode = { 'n', 'x' }
+
+  map(mode, '<C-a>', boole.increment)
+  map(mode, '<C-x>', boole.decrement)
+
+  map(mode, 'g<C-a>', function()
+    boole.increment(true)
+  end)
+  map(mode, 'g<C-x>', function()
+    boole.decrement(true)
+  end)
 <
 
 ==============================================================================
