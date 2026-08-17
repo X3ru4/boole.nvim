@@ -162,7 +162,7 @@ local function active(direction, prgs)
 			else
 				local line_count = end_pos[1] - start_pos[1]
 				if line_count >= MAXIMUM_LOOP then
-					vim.notify('Too much lines, maximun is ' .. MAXIMUM_LOOP('lines'), vim.log.levels.WARN)
+					vim.notify('Too many lines, maximum is ' .. MAXIMUM_LOOP .. ' lines.', vim.log.levels.WARN)
 					v_count = 0
 					return
 				end
@@ -180,7 +180,7 @@ local function active(direction, prgs)
 			else
 				local line_count = end_pos[1] - start_pos[1]
 				if line_count >= MAXIMUM_LOOP then
-					vim.notify('Too much lines, maximun is ' .. MAXIMUM_LOOP('lines'), vim.log.levels.WARN)
+					vim.notify('Too many lines, maximum is ' .. MAXIMUM_LOOP .. ' lines.', vim.log.levels.WARN)
 					v_count = 0
 					return
 				end
