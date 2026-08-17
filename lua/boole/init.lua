@@ -11,7 +11,7 @@ local set_cursor = vim.api.nvim_win_set_cursor
 local expand = vim.fn.expand
 local getpos = vim.fn.getpos
 
-local MAXIMUN_LOOP = 1024
+local MAXIMUM_LOOP = 1024
 local KC_CTRL_A = vim.keycode('<C-a>')
 local KC_CTRL_X = vim.keycode('<C-x>')
 local KC_ESC = vim.keycode('<Esc>')
@@ -34,8 +34,8 @@ function M.generate(cycle, allow_caps)
 
 			replace_map.increment[capitalized_current] = capitalized_next
 			replace_map.decrement[capitalized_next] = capitalized_current
-			replace_map.increment[uppercase_next] = uppercase_current
-			replace_map.decrement[uppercase_current] = uppercase_next
+			replace_map.increment[uppercase_current] = uppercase_next
+			replace_map.decrement[uppercase_next] = uppercase_current
 		end
 	end
 end
@@ -77,7 +77,7 @@ local function replace_word(word, ln, startcol, endcol, move)
 end
 
 local function scan_line(line, move_back, start_pos, end_col)
-	for _ = 1, MAXIMUN_LOOP do
+	for _ = 1, MAXIMUM_LOOP do
 		local cword = expand('<cword>')
 		local current_pos = get_cursor(0)
 
@@ -161,8 +161,8 @@ local function active(direction, prgs)
 				try_match(direction, start_pos, nil, true, nil, prgs, nil)
 			else
 				local line_count = end_pos[1] - start_pos[1]
-				if line_count >= MAXIMUN_LOOP then
-					vim.notify('Too much lines, maximun is ' .. MAXIMUN_LOOP('lines'), vim.log.levels.WARN)
+				if line_count >= MAXIMUM_LOOP then
+					vim.notify('Too much lines, maximun is ' .. MAXIMUM_LOOP('lines'), vim.log.levels.WARN)
 					v_count = 0
 					return
 				end
@@ -179,8 +179,8 @@ local function active(direction, prgs)
 				try_match(direction, start_pos, end_pos[2], true, nil, prgs, nil)
 			else
 				local line_count = end_pos[1] - start_pos[1]
-				if line_count >= MAXIMUN_LOOP then
-					vim.notify('Too much lines, maximun is ' .. MAXIMUN_LOOP('lines'), vim.log.levels.WARN)
+				if line_count >= MAXIMUM_LOOP then
+					vim.notify('Too much lines, maximun is ' .. MAXIMUM_LOOP('lines'), vim.log.levels.WARN)
 					v_count = 0
 					return
 				end
@@ -246,8 +246,8 @@ function M.setup(opts)
 		end
 	end
 
-	if opts.maximun_loop and opts.maximun_loop > 0 then
-		MAXIMUN_LOOP = opts.maximun_loop
+	if opts.maximum_loop and opts.maximum_loop > 0 then
+		MAXIMUM_LOOP = opts.maximum_loop
 	end
 
 	if opts.presets then
