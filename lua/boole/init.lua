@@ -1,10 +1,20 @@
 local M = {}
-local MAXIMUN_LOOP = 1024
-local replace_map = {
-	increment = {},
-	decrement = {},
-}
+local replace_map = { increment = {}, decrement = {} }
 local v_count = 0
+local keymode = 'nx'
+
+local feedkeys = vim.api.nvim_feedkeys
+local get_current_line = vim.api.nvim_get_current_line
+local buf_set_text = vim.api.nvim_buf_set_text
+local get_cursor = vim.api.nvim_win_get_cursor
+local set_cursor = vim.api.nvim_win_set_cursor
+local expand = vim.fn.expand
+local getpos = vim.fn.getpos
+
+local MAXIMUN_LOOP = 1024
+local KC_CTRL_A = vim.keycode('<C-a>')
+local KC_CTRL_X = vim.keycode('<C-x>')
+local KC_ESC = vim.keycode('<Esc>')
 
 ---Generate cycle
 ---@param cycle string[]
@@ -37,120 +47,192 @@ function M.generate_presets(opts)
 	for _, name in ipairs(opts) do
 		if presets[name] then
 			for _, val in ipairs(presets[name]) do
-				M.generate(unpack(val))
+				M.generate(val[1], val[2])
 			end
 		end
 	end
 end
 
-local feedkeys = vim.api.nvim_feedkeys
-local buf_set_text = vim.api.nvim_buf_set_text
-local get_cursor = vim.api.nvim_win_get_cursor
-local set_cursor = vim.api.nvim_win_set_cursor
-local expand = vim.fn.expand
-local bang = 'nx'
+local function next_word(direction, word)
+	return direction and replace_map.increment[word] or replace_map.decrement[word]
+end
 
-local function scan_line(start, line)
-	for i = 0, MAXIMUN_LOOP do
-		if start[1] < get_cursor(0)[1] then
-			set_cursor(0, start)
-			return
-		end
+local function fallback_default(direction, visual_mode, prgs)
+	if visual_mode then
+		feedkeys('gv', keymode, false)
+	end
+	if direction then
+		feedkeys((v_count > 1 and v_count or '') .. (prgs and 'g' or '') .. KC_CTRL_A, keymode, false)
+	else
+		feedkeys((v_count > 1 and v_count or '') .. (prgs and 'g' or '') .. KC_CTRL_X, keymode, false)
+	end
+end
 
+---Zero-based indexing
+local function replace_word(word, ln, startcol, endcol, move)
+	buf_set_text(0, ln, startcol, ln, endcol, { word })
+	if move then
+		set_cursor(0, { ln + 1, startcol })
+	end
+end
+
+local function scan_line(line, move_back, start_pos, end_col)
+	for _ = 1, MAXIMUN_LOOP do
 		local cword = expand('<cword>')
+		local current_pos = get_cursor(0)
 
 		if tonumber(cword) or cword:find('%d') then
 			return
 		end
-		if replace_map.increment[cword] or replace_map.decrement[cword] then
-			return cword, line:find(cword, start[2])
-		end
 
-		if i == MAXIMUN_LOOP then
-			set_cursor(0, start)
+		if current_pos[1] > start_pos[1] or (end_col and current_pos[2] > end_col) then
+			if move_back then
+				set_cursor(0, start_pos)
+			end
 			return
 		end
 
-		feedkeys('w', bang, false)
+		if replace_map.increment[cword] or replace_map.decrement[cword] then
+			return cword, line:find(cword, start_pos[2] + 1, true)
+		end
+
+		feedkeys('w', keymode, false)
 	end
 end
 
----@param direction 'increment'|'decrement'
-function M.active(direction)
+local function try_match(direction, start_pos, endcol, fallback, visual_mode, prgs, move)
+	if move then
+		set_cursor(0, start_pos)
+	end
+
+	local line = get_current_line()
+	local match_word, start_idx = scan_line(line:sub(1, endcol and endcol + 1), not visual_mode, start_pos, endcol)
+
+	if match_word then
+		feedkeys('b', keymode, false)
+		local current_col = get_cursor(0)[2] + 1
+
+		if start_idx then
+			local first_letter_byte = vim.str_byteindex(match_word, 'utf-32', 1)
+			local first_letter = match_word:sub(1, first_letter_byte)
+			local current_letter = line:sub(current_col, current_col + first_letter_byte - 1)
+			local start_letter = line:sub(start_pos[2] + 1, start_pos[2] + 1)
+
+			if start_letter:find('%w') and start_idx >= current_col and current_letter == first_letter then
+				start_idx = current_col
+			end
+		else
+			start_idx = current_col
+		end
+
+		local nword
+		v_count = v_count < 2 and 1 or v_count
+		for _ = 1, v_count do
+			nword = next_word(direction, match_word)
+		end
+
+		replace_word(nword, start_pos[1] - 1, start_idx - 1, start_idx - 1 + #match_word, not visual_mode)
+	elseif fallback then
+		fallback_default(direction, visual_mode, prgs)
+	end
+end
+
+local function active(direction, prgs)
 	v_count = vim.v.count
+	local mode = vim.api.nvim_get_mode().mode
 	local start_pos = get_cursor(0)
-	local sta_ln, sta_col = start_pos[1], start_pos[2]
-	local line = vim.api.nvim_get_current_line()
-	local match, match_start = scan_line(start_pos, line)
+	if mode == 'v' or mode == 'V' or mode == '\22' then
+		local end_pos = getpos('v')
+		feedkeys(KC_ESC, keymode, false)
 
-	if match then
-		-- Skip if only one character
-		if vim.str_utfindex(match, 'utf-32') > 1 then
-			feedkeys('b', bang, false)
+		-- Normalize position
+		end_pos[1], end_pos[2] = end_pos[2], end_pos[3] - 1
+		end_pos[3], end_pos[4] = nil, nil
+
+		if start_pos[1] > end_pos[1] then
+			start_pos, end_pos = end_pos, start_pos
+		end
+		if start_pos[1] == end_pos[1] and start_pos[2] > end_pos[2] then
+			start_pos[2], end_pos[2] = end_pos[2], start_pos[2]
 		end
 
-		local col = get_cursor(0)[2] + 1
+		if mode == 'V' then
+			if start_pos[1] == end_pos[1] then
+				try_match(direction, start_pos, nil, true, nil, prgs, nil)
+			else
+				local line_count = end_pos[1] - start_pos[1]
+				if line_count >= MAXIMUN_LOOP then
+					vim.notify('Too much lines, maximun is ' .. MAXIMUN_LOOP('lines'), vim.log.levels.WARN)
+					v_count = 0
+					return
+				end
 
-		-- We need to move back to check because `match_start`
-		-- might be finding the wrong word.
-		if match_start then
-			-- Get the first byte of the character.
-			local char_byte = vim.str_utf_end(match, 1)
-			if
-				match:sub(1, 1 + char_byte) == line:sub(col, col + char_byte)
-				and not line:sub(sta_col + 1, sta_col + 1):find('%A')
-			then
-				match_start = col
+				start_pos[2] = 0
+				for _ = 0, line_count do
+					try_match(direction, start_pos, nil, nil, true, prgs, true)
+					start_pos[1] = start_pos[1] + 1
+				end
+				fallback_default(direction, true, prgs)
 			end
 		else
-			match_start = col
-		end
+			if start_pos[1] == end_pos[1] then
+				try_match(direction, start_pos, end_pos[2], true, nil, prgs, nil)
+			else
+				local line_count = end_pos[1] - start_pos[1]
+				if line_count >= MAXIMUN_LOOP then
+					vim.notify('Too much lines, maximun is ' .. MAXIMUN_LOOP('lines'), vim.log.levels.WARN)
+					v_count = 0
+					return
+				end
 
-		local cword = match
+				for i = 0, line_count do
+					if i == 1 and mode ~= '\22' then
+						start_pos[2] = 0
+					end
 
-		if v_count < 2 then
-			match = direction == 'increment' and replace_map.increment[match] or replace_map.decrement[match]
-		else
-			for _ = 1, v_count do
-				match = direction == 'increment' and replace_map.increment[match] or replace_map.decrement[match]
+					if i == line_count or mode == '\22' then
+						try_match(direction, start_pos, end_pos[2], nil, true, prgs, true)
+					else
+						try_match(direction, start_pos, nil, nil, true, prgs, true)
+					end
+					start_pos[1] = start_pos[1] + 1
+				end
 			end
 		end
-
-		buf_set_text(0, sta_ln - 1, match_start - 1, sta_ln - 1, match_start + #cword - 1, { match })
-		set_cursor(0, { sta_ln, match_start - 1 })
 	else
-		-- Fallback to original <C-a> and <C-x> functions for numbers.
-		if direction == 'increment' then
-			feedkeys((v_count > 0 and v_count or '') .. '', bang, false)
-		end
-		if direction == 'decrement' then
-			feedkeys((v_count > 0 and v_count or '') .. '', bang, false)
-		end
+		try_match(direction, start_pos, nil, true, nil, prgs, nil)
 	end
 	v_count = 0
+end
+
+function M.increment(prgs)
+	active(true, prgs)
+end
+function M.decrement(prgs)
+	active(false, prgs)
 end
 
 ---Setup boole
 ---@param opts boole.config|nil
 function M.setup(opts)
-	vim.api.nvim_create_user_command('Boole', function(args)
-		-- local start = vim.uv.hrtime()
-		M.active(args.args)
-		-- print('' .. (vim.uv.hrtime() - start) / 1000001)
-	end, {
-		nargs = 1,
-		complete = function()
-			return { 'increment', 'decrement' }
-		end,
-	})
-
 	if not opts then
 		return
 	end
 
-	opts.mappings = opts.mappings or {}
-	vim.keymap.set({ 'n', 'x' }, opts.mappings.increment or '<C-a>', '<Cmd>Boole increment<CR>')
-	vim.keymap.set({ 'n', 'x' }, opts.mappings.decrement or '<C-x>', '<Cmd>Boole decrement<CR>')
+	if opts.use_default_mappings or opts.use_default_mappings == nil then
+		local map = vim.keymap.set
+		local mode = { 'n', 'x' }
+
+		map(mode, '<C-a>', M.increment)
+		map(mode, '<C-x>', M.decrement)
+
+		map(mode, 'g<C-a>', function()
+			M.increment(true)
+		end)
+		map(mode, 'g<C-x>', function()
+			M.decrement(true)
+		end)
+	end
 
 	if opts.additions then
 		for _, val in ipairs(opts.additions) do
@@ -164,8 +246,8 @@ function M.setup(opts)
 		end
 	end
 
-	if opts.maximun_move and opts.maximun_move > 1 then
-		MAXIMUN_LOOP = opts.maximun_move
+	if opts.maximun_loop and opts.maximun_loop > 0 then
+		MAXIMUN_LOOP = opts.maximun_loop
 	end
 
 	if opts.presets then

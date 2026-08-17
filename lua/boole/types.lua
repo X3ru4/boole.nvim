@@ -1,8 +1,7 @@
 ---@meta
----@alias boole.mappings { increment: string|nil, decrement:string|nil }
 ---@class boole.config
 ---@field presets string[]|nil
 ---@field allow_caps_additions string[][]|nil
 ---@field additions string[][]|nil
----@field mappings boole.mappings|nil
----@field maximun_move integer|nil Limit movement using the 'w' motion.
+---@field use_default_mappings boolean|nil
+---@field maximun_loop integer|nil
