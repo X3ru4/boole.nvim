@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.3.0](https://github.com/X3ru4/boole.nvim/compare/v3.2.0...v3.3.0) (2026-08-17)
+
+
+### Features
+
+* provide default &lt;C-a&gt;/&lt;C-x&gt; mappings with visual mode and progressive support ([dfb6370](https://github.com/X3ru4/boole.nvim/commit/dfb6370bd2db7cfdb3b243c477d2791612aa860d))
+* update documentation to reflect new default g&lt;Ctrl-a&gt;/&lt;Ctrl-x&gt; mappings ([9c81c45](https://github.com/X3ru4/boole.nvim/commit/9c81c456f59a434255d6b86920e60ccddd7fbe45))
+
 ## [3.2.0](https://github.com/X3ru4/boole.nvim/compare/v3.1.0...v3.2.0) (2026-08-01)
 
 
