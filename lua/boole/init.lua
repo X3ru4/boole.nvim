@@ -138,7 +138,7 @@ local function try_match(direction, start_pos, endcol, fallback, visual_mode, mo
 
 		replace_word(nword, start_pos[1] - 1, start_idx - 1, start_idx - 1 + #word, not visual_mode)
 
-		match_words[#match_words + 1] = nword
+		match_words[#match_words + 1] = prgs and nword
 	elseif fallback then
 		fallback_default(direction, visual_mode, prgs)
 	end
@@ -170,6 +170,7 @@ local function active(direction, prgs)
 				local line_count = end_pos[1] - start_pos[1]
 				if line_count >= MAXIMUM_LOOP then
 					vim.notify('Too many lines, maximum is ' .. MAXIMUM_LOOP .. ' lines.', vim.log.levels.WARN)
+					match_words = {}
 					return
 				end
 
@@ -179,7 +180,6 @@ local function active(direction, prgs)
 					start_pos[1] = start_pos[1] + 1
 				end
 				fallback_default(direction, true, prgs)
-				match_words = {}
 			end
 		else
 			if start_pos[1] == end_pos[1] then
@@ -188,6 +188,7 @@ local function active(direction, prgs)
 				local line_count = end_pos[1] - start_pos[1]
 				if line_count >= MAXIMUM_LOOP then
 					vim.notify('Too many lines, maximum is ' .. MAXIMUM_LOOP .. ' lines.', vim.log.levels.WARN)
+					match_words = {}
 					return
 				end
 
@@ -204,12 +205,12 @@ local function active(direction, prgs)
 					start_pos[1] = start_pos[1] + 1
 				end
 				fallback_default(direction, true, prgs)
-				match_words = {}
 			end
 		end
 	else
 		try_match(direction, start_pos, nil, true, nil, prgs, nil)
 	end
+	match_words = {}
 end
 
 function M.increment(prgs)
