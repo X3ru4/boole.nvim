@@ -197,6 +197,7 @@ local function active(direction, prgs)
 					end
 					start_pos[1] = start_pos[1] + 1
 				end
+				fallback_default(direction, true, prgs)
 			end
 		end
 	else
