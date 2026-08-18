@@ -24,7 +24,9 @@ Using [lazy.nvim](https://github.com/folke/lazy.nvim)
 return {
   'X3ru4/boole.nvim',
   event = 'BufReadPost',
-  opts = {},
+  opts = {
+    presets = { 'colors', 'weekdays', 'months' },
+  },
 }
 ```
 
