@@ -23,12 +23,7 @@ Using [lazy.nvim](https://github.com/folke/lazy.nvim)
 ```lua
 return {
   'X3ru4/boole.nvim',
-  keys = {
-    { mode = { 'n', 'x' }, '<C-a>' },
-    { mode = { 'n', 'x' }, '<C-x>' },
-    { mode = { 'n', 'x' }, 'g<C-a>' },
-    { mode = { 'n', 'x' }, 'g<C-x>' },
-  },
+  event = 'BufReadPost',
   opts = {},
 }
 ```
