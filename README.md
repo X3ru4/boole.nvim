@@ -14,7 +14,7 @@ boolean values like `on`, `yes`, and `true` as well as cycling through:
   - [x] Several issues have been fixed.
   - [x] Supports special characters.
   - [x] Supports Visual modes.
-  - [ ] Supports progressive increases and decreases.
+  - [x] Supports progressive increases and decreases.
 
 ## Installation
 
