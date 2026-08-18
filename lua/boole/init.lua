@@ -1,5 +1,6 @@
 local M = {}
 local replace_map = { increment = {}, decrement = {} }
+local match_words = {}
 local v_count = 0
 local keymode = 'nx'
 
@@ -100,25 +101,25 @@ local function scan_line(line, move_back, start_pos, end_col)
 	end
 end
 
-local function try_match(direction, start_pos, endcol, fallback, visual_mode, prgs, move)
+local function try_match(direction, start_pos, endcol, fallback, visual_mode, move, prgs, count)
 	if move then
 		set_cursor(0, start_pos)
 	end
 
 	local line = get_current_line()
-	local match_word, start_idx = scan_line(line:sub(1, endcol and endcol + 1), not visual_mode, start_pos, endcol)
+	local word, start_idx = scan_line(line:sub(1, endcol and endcol + 1), not visual_mode, start_pos, endcol)
 
-	if match_word then
+	if word then
 		feedkeys('b', keymode, false)
 		local current_col = get_cursor(0)[2] + 1
 
 		if start_idx then
-			local first_letter_byte = vim.str_byteindex(match_word, 'utf-32', 1)
-			local first_letter = match_word:sub(1, first_letter_byte)
+			local first_letter_byte = vim.str_byteindex(word, 'utf-32', 1)
+			local first_letter = word:sub(1, first_letter_byte)
 			local current_letter = line:sub(current_col, current_col + first_letter_byte - 1)
-			local start_letter = line:sub(start_pos[2] + 1, start_pos[2] + 1)
+			local original_letter = line:sub(start_pos[2] + 1, start_pos[2] + 1)
 
-			if start_letter:find('%w') and start_idx >= current_col and current_letter == first_letter then
+			if original_letter:find('%w') and start_idx >= current_col and current_letter == first_letter then
 				start_idx = current_col
 			end
 		else
@@ -126,12 +127,18 @@ local function try_match(direction, start_pos, endcol, fallback, visual_mode, pr
 		end
 
 		local nword
-		v_count = v_count < 2 and 1 or v_count
-		for _ = 1, v_count do
-			nword = next_word(direction, match_word)
+		if prgs then
+			nword = match_words[(count or 1) - 1] or nword
 		end
 
-		replace_word(nword, start_pos[1] - 1, start_idx - 1, start_idx - 1 + #match_word, not visual_mode)
+		v_count = v_count < 2 and 1 or v_count
+		for _ = 1, v_count do
+			nword = next_word(direction, nword or word)
+		end
+
+		replace_word(nword, start_pos[1] - 1, start_idx - 1, start_idx - 1 + #word, not visual_mode)
+
+		match_words[#match_words + 1] = nword
 	elseif fallback then
 		fallback_default(direction, visual_mode, prgs)
 	end
@@ -158,30 +165,29 @@ local function active(direction, prgs)
 
 		if mode == 'V' then
 			if start_pos[1] == end_pos[1] then
-				try_match(direction, start_pos, nil, true, nil, prgs, nil)
+				try_match(direction, start_pos, nil, true, nil, nil, prgs)
 			else
 				local line_count = end_pos[1] - start_pos[1]
 				if line_count >= MAXIMUM_LOOP then
 					vim.notify('Too many lines, maximum is ' .. MAXIMUM_LOOP .. ' lines.', vim.log.levels.WARN)
-					v_count = 0
 					return
 				end
 
 				start_pos[2] = 0
-				for _ = 0, line_count do
-					try_match(direction, start_pos, nil, nil, true, prgs, true)
+				for i = 0, line_count do
+					try_match(direction, start_pos, nil, nil, true, true, prgs, i + 1)
 					start_pos[1] = start_pos[1] + 1
 				end
 				fallback_default(direction, true, prgs)
+				match_words = {}
 			end
 		else
 			if start_pos[1] == end_pos[1] then
-				try_match(direction, start_pos, end_pos[2], true, nil, prgs, nil)
+				try_match(direction, start_pos, end_pos[2], true, nil, nil, prgs)
 			else
 				local line_count = end_pos[1] - start_pos[1]
 				if line_count >= MAXIMUM_LOOP then
 					vim.notify('Too many lines, maximum is ' .. MAXIMUM_LOOP .. ' lines.', vim.log.levels.WARN)
-					v_count = 0
 					return
 				end
 
@@ -191,19 +197,19 @@ local function active(direction, prgs)
 					end
 
 					if i == line_count or mode == '\22' then
-						try_match(direction, start_pos, end_pos[2], nil, true, prgs, true)
+						try_match(direction, start_pos, end_pos[2], nil, true, true, prgs, i + 1)
 					else
-						try_match(direction, start_pos, nil, nil, true, prgs, true)
+						try_match(direction, start_pos, nil, nil, true, true, prgs, i + 1)
 					end
 					start_pos[1] = start_pos[1] + 1
 				end
 				fallback_default(direction, true, prgs)
+				match_words = {}
 			end
 		end
 	else
 		try_match(direction, start_pos, nil, true, nil, prgs, nil)
 	end
-	v_count = 0
 end
 
 function M.increment(prgs)
