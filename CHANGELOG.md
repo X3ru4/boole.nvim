@@ -1,5 +1,20 @@
 # Changelog
 
+## [3.4.0](https://github.com/X3ru4/boole.nvim/compare/v3.3.0...v3.4.0) (2026-08-18)
+
+
+### Features
+
+* Supports simple progressive increments and decrements. ([813aaaa](https://github.com/X3ru4/boole.nvim/commit/813aaaa676d61a1cf09be4d3ca3972115a6d2ec2))
+
+
+### Bug Fixes
+
+* call fallback_default after active direction processing to ensure proper fallback handling. ([93aeed5](https://github.com/X3ru4/boole.nvim/commit/93aeed583b7f6619b11fe4655295c441f3ced685))
+* correct warning message for line count limit ([6bd015c](https://github.com/X3ru4/boole.nvim/commit/6bd015ce3c4142ea7f8843b4da186f9c7e3afcb0))
+* rename MAXIMUN_LOOP to MAXIMUM_LOOP and adjust usage ([9bb10da](https://github.com/X3ru4/boole.nvim/commit/9bb10da202cbfe91d03d62d2bb725ba7871a56b5))
+* skip saving words to `match_words` without `prgs` ([921f31e](https://github.com/X3ru4/boole.nvim/commit/921f31e9a404c1d927b21225408b2421915a377a))
+
 ## [3.3.0](https://github.com/X3ru4/boole.nvim/compare/v3.2.0...v3.3.0) (2026-08-17)
 
 
