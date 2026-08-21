@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.4.2](https://github.com/X3ru4/boole.nvim/compare/v3.4.1...v3.4.2) (2026-08-21)
+
+
+### Bug Fixes
+
+* avoid the loop repeating continuously on the last line ([1878284](https://github.com/X3ru4/boole.nvim/commit/18782841ae99796f1efc22d4030639f41f7b9d91))
+
 ## [3.4.1](https://github.com/X3ru4/boole.nvim/compare/v3.4.0...v3.4.1) (2026-08-21)
 
 
