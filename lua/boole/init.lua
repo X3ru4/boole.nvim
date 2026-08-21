@@ -78,11 +78,19 @@ local function replace_word(word, ln, startcol, endcol, move)
 end
 
 local function scan_line(line, move_back, start_pos, end_col)
+	local pre_col = -1
 	for _ = 1, MAXIMUM_LOOP do
 		local cword = expand('<cword>')
 		local current_pos = get_cursor(0)
 
 		if tonumber(cword) or cword:find('%d') then
+			return
+		end
+
+		if current_pos[2] == pre_col then
+			if move_back then
+				set_cursor(0, start_pos)
+			end
 			return
 		end
 
@@ -97,11 +105,12 @@ local function scan_line(line, move_back, start_pos, end_col)
 			return cword, line:find(cword, start_pos[2] + 1, true)
 		end
 
+		pre_col = current_pos[2]
 		feedkeys('w', keymode, false)
 	end
 end
 
-local function try_match(direction, start_pos, endcol, fallback, visual_mode, move, prgs, count, vis_o_line)
+local function try_match(direction, start_pos, endcol, fallback, visual_mode, move, prgs, count, vis_singleline)
 	if move then
 		set_cursor(0, start_pos)
 	end
@@ -109,7 +118,7 @@ local function try_match(direction, start_pos, endcol, fallback, visual_mode, mo
 	local line = get_current_line()
 	local word, start_idx
 
-	if vis_o_line then
+	if vis_singleline then
 		local selection = line:sub(start_pos[2] + 1, endcol and endcol + 1)
 		if replace_map.increment[selection] or replace_map.decrement[selection] then
 			word = selection
@@ -119,8 +128,8 @@ local function try_match(direction, start_pos, endcol, fallback, visual_mode, mo
 		word, start_idx = scan_line(line:sub(1, endcol and endcol + 1), not visual_mode, start_pos, endcol)
 	end
 
-	if word and (vis_o_line and start_idx or true) then
-		if not vis_o_line then
+	if word and (vis_singleline and start_idx or true) then
+		if not vis_singleline then
 			feedkeys('b', keymode, false)
 			local current_col = get_cursor(0)[2] + 1
 
