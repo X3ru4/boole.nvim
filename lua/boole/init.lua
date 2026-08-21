@@ -101,29 +101,41 @@ local function scan_line(line, move_back, start_pos, end_col)
 	end
 end
 
-local function try_match(direction, start_pos, endcol, fallback, visual_mode, move, prgs, count)
+local function try_match(direction, start_pos, endcol, fallback, visual_mode, move, prgs, count, vis_o_line)
 	if move then
 		set_cursor(0, start_pos)
 	end
 
 	local line = get_current_line()
-	local word, start_idx = scan_line(line:sub(1, endcol and endcol + 1), not visual_mode, start_pos, endcol)
+	local word, start_idx
 
-	if word then
-		feedkeys('b', keymode, false)
-		local current_col = get_cursor(0)[2] + 1
+	if vis_o_line then
+		local selection = line:sub(start_pos[2] + 1, endcol and endcol + 1)
+		if replace_map.increment[selection] or replace_map.decrement[selection] then
+			word = selection
+			start_idx = line:find(selection, start_pos[2] + 1, true)
+		end
+	else
+		word, start_idx = scan_line(line:sub(1, endcol and endcol + 1), not visual_mode, start_pos, endcol)
+	end
 
-		if start_idx then
-			local first_letter_byte = vim.str_byteindex(word, 'utf-32', 1)
-			local first_letter = word:sub(1, first_letter_byte)
-			local current_letter = line:sub(current_col, current_col + first_letter_byte - 1)
-			local original_letter = line:sub(start_pos[2] + 1, start_pos[2] + 1)
+	if word and (vis_o_line and start_idx or true) then
+		if not vis_o_line then
+			feedkeys('b', keymode, false)
+			local current_col = get_cursor(0)[2] + 1
 
-			if original_letter:find('%w') and start_idx >= current_col and current_letter == first_letter then
+			if start_idx then
+				local first_letter_byte = vim.str_byteindex(word, 'utf-32', 1)
+				local first_letter = word:sub(1, first_letter_byte)
+				local current_letter = line:sub(current_col, current_col + first_letter_byte - 1)
+				local original_letter = line:sub(start_pos[2] + 1, start_pos[2] + 1)
+
+				if original_letter:find('%w') and start_idx >= current_col and current_letter == first_letter then
+					start_idx = current_col
+				end
+			else
 				start_idx = current_col
 			end
-		else
-			start_idx = current_col
 		end
 
 		local nword
@@ -185,7 +197,7 @@ local function active(direction, prgs)
 			end
 		else
 			if start_pos[1] == end_pos[1] then
-				try_match(direction, start_pos, end_pos[2], true, nil, nil, prgs)
+				try_match(direction, start_pos, end_pos[2], true, nil, nil, prgs, nil, true)
 			else
 				match_words = {}
 				local line_count = end_pos[1] - start_pos[1]
