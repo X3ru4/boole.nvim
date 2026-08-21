@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.4.1](https://github.com/X3ru4/boole.nvim/compare/v3.4.0...v3.4.1) (2026-08-21)
+
+
+### Bug Fixes
+
+* **init:** always find the selected text in single-line visual mode ([15f87f8](https://github.com/X3ru4/boole.nvim/commit/15f87f839ba2453dde586ae8013b34d678297c05))
+
 ## [3.4.0](https://github.com/X3ru4/boole.nvim/compare/v3.3.0...v3.4.0) (2026-08-18)
 
 
