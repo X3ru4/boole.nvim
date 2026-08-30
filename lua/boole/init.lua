@@ -102,7 +102,7 @@ local function scan_line(line, move_back, start_pos, end_col)
 		end
 
 		if replace_map.increment[cword] or replace_map.decrement[cword] then
-			return cword, line:find(cword, start_pos[2] + 1, true)
+			return cword, line:find(cword, start_pos[2] + 1, true), current_pos[2]
 		end
 
 		pre_col = current_pos[2]
@@ -116,7 +116,7 @@ local function try_match(direction, start_pos, endcol, fallback, visual_mode, mo
 	end
 
 	local line = get_current_line()
-	local word, start_idx
+	local word, start_idx, stop_col
 
 	if vis_singleline then
 		local selection = line:sub(start_pos[2] + 1, endcol and endcol + 1)
@@ -125,7 +125,7 @@ local function try_match(direction, start_pos, endcol, fallback, visual_mode, mo
 			start_idx = line:find(selection, start_pos[2] + 1, true)
 		end
 	else
-		word, start_idx = scan_line(line:sub(1, endcol and endcol + 1), not visual_mode, start_pos, endcol)
+		word, start_idx, stop_col = scan_line(line:sub(1, endcol and endcol + 1), not visual_mode, start_pos, endcol)
 	end
 
 	if word and (vis_singleline and start_idx or true) then
@@ -134,12 +134,18 @@ local function try_match(direction, start_pos, endcol, fallback, visual_mode, mo
 			local current_col = get_cursor(0)[2] + 1
 
 			if start_idx then
-				local first_letter_byte = vim.str_byteindex(word, 'utf-32', 1)
-				local first_letter = word:sub(1, first_letter_byte)
-				local current_letter = line:sub(current_col, current_col + first_letter_byte - 1)
-				local original_letter = line:sub(start_pos[2] + 1, start_pos[2] + 1)
+				local start_char_byte = vim.str_byteindex(word, 'utf-32', 1)
+				local start_char = word:sub(1, start_char_byte)
+				local current_char = line:sub(current_col, current_col + start_char_byte - 1)
+				local stop_char = line:sub(stop_col + 1, stop_col + 1)
+				local origin_char = line:sub(start_pos[2] + 1, start_pos[2] + 1)
 
-				if original_letter:find('%w') and start_idx >= current_col and current_letter == first_letter then
+				if
+					origin_char:find('%w')
+					and stop_char:find('%w')
+					and start_idx >= current_col
+					and current_char == start_char
+				then
 					start_idx = current_col
 				end
 			else
