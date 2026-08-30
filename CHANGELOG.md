@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.4.3](https://github.com/X3ru4/boole.nvim/compare/v3.4.2...v3.4.3) (2026-08-30)
+
+
+### Bug Fixes
+
+* correctly handle stop column for increment/decrement word matching ([7b15183](https://github.com/X3ru4/boole.nvim/commit/7b1518301346b7bf30844e4ec4f47c33837c2933))
+
 ## [3.4.2](https://github.com/X3ru4/boole.nvim/compare/v3.4.1...v3.4.2) (2026-08-21)
 
 
