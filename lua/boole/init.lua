@@ -143,8 +143,9 @@ local function try_match(direction, start_pos, endcol, fallback, visual_mode, mo
 				if
 					origin_char:find('%w')
 					and stop_char:find('%w')
-					and start_idx >= current_col
+					and stop_char ~= start_char
 					and current_char == start_char
+					and start_idx >= current_col
 				then
 					start_idx = current_col
 				end
