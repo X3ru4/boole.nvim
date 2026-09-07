@@ -210,14 +210,9 @@ local function active(direction, prgs)
 				try_match(direction, start_pos, nil, true, nil, nil, prgs)
 			else
 				match_words = {}
-				local line_count = end_pos[1] - start_pos[1]
-				if line_count >= MAXIMUM_LOOP then
-					vim.notify('Too many lines, maximum is ' .. MAXIMUM_LOOP .. ' lines.', vim.log.levels.WARN)
-					return
-				end
-
 				start_pos[2] = 0
-				for i = 0, line_count do
+
+				for i = 0, end_pos[1] - start_pos[1] do
 					try_match(direction, start_pos, nil, nil, true, true, prgs, i + 1)
 					start_pos[1] = start_pos[1] + 1
 				end
@@ -227,12 +222,8 @@ local function active(direction, prgs)
 			if start_pos[1] == end_pos[1] then
 				try_match(direction, start_pos, end_pos[2], true, nil, nil, prgs, nil, true)
 			else
-				match_words = {}
 				local line_count = end_pos[1] - start_pos[1]
-				if line_count >= MAXIMUM_LOOP then
-					vim.notify('Too many lines, maximum is ' .. MAXIMUM_LOOP .. ' lines.', vim.log.levels.WARN)
-					return
-				end
+				match_words = {}
 
 				for i = 0, line_count do
 					if i == 1 and mode ~= '\22' then
