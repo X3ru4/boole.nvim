@@ -110,7 +110,7 @@ local function scan_line(line, move_back, start_pos, end_col)
 	end
 end
 
-local function try_match(direction, start_pos, endcol, fallback, visual_mode, move, prgs, count, vis_singleline)
+local function try_match(direction, start_pos, endcol, fallback, visual_mode, move, prgs, count, select_single)
 	if move then
 		set_cursor(0, start_pos)
 	end
@@ -118,18 +118,30 @@ local function try_match(direction, start_pos, endcol, fallback, visual_mode, mo
 	local line = get_current_line()
 	local word, start_idx, stop_col
 
-	if vis_singleline then
+	if select_single then
 		local selection = line:sub(start_pos[2] + 1, endcol and endcol + 1)
 		if replace_map.increment[selection] or replace_map.decrement[selection] then
 			word = selection
 			start_idx = line:find(selection, start_pos[2] + 1, true)
+		else
+			word, start_idx, stop_col = scan_line(line:sub(1, endcol and endcol + 1), true, start_pos, endcol)
 		end
 	else
 		word, start_idx, stop_col = scan_line(line:sub(1, endcol and endcol + 1), not visual_mode, start_pos, endcol)
 	end
 
-	if word and (vis_singleline and start_idx or true) then
-		if not vis_singleline then
+	local selected, matched_select = true, true
+
+	if select_single and not start_idx then
+		matched_select = false
+	end
+
+	if endcol and not start_idx then
+		selected = false
+	end
+
+	if word and selected and matched_select then
+		if not select_single then
 			feedkeys('b', keymode, false)
 			local current_col = get_cursor(0)[2] + 1
 
@@ -187,9 +199,9 @@ local function active(direction, prgs)
 		end_pos[3], end_pos[4] = nil, nil
 
 		if start_pos[1] > end_pos[1] then
-			start_pos, end_pos = end_pos, start_pos
+			start_pos[1], end_pos[1] = end_pos[1], start_pos[1]
 		end
-		if start_pos[1] == end_pos[1] and start_pos[2] > end_pos[2] then
+		if start_pos[2] > end_pos[2] then
 			start_pos[2], end_pos[2] = end_pos[2], start_pos[2]
 		end
 
