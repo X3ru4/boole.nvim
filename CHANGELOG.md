@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.4.4](https://github.com/X3ru4/boole.nvim/compare/v3.4.3...v3.4.4) (2026-09-07)
+
+
+### Bug Fixes
+
+* **boole:** avoid matching when start and stop characters are identical ([bc934fd](https://github.com/X3ru4/boole.nvim/commit/bc934fdb46c5cbf1224910a16c37c480f3fb5693))
+* improve single-line selection handling and correct start/end position swapping ([bfb5b96](https://github.com/X3ru4/boole.nvim/commit/bfb5b96337f9696d224444b5274bf8203201da8a))
+
 ## [3.4.3](https://github.com/X3ru4/boole.nvim/compare/v3.4.2...v3.4.3) (2026-08-30)
 
 
