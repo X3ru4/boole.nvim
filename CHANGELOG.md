@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.4.5](https://github.com/X3ru4/boole.nvim/compare/v3.4.4...v3.4.5) (2026-09-07)
+
+
+### Bug Fixes
+
+* remove line count limit check to allow processing of larger selections ([5ba02ec](https://github.com/X3ru4/boole.nvim/commit/5ba02ec1de2d987a26b24c72253040efffaf79f0))
+
 ## [3.4.4](https://github.com/X3ru4/boole.nvim/compare/v3.4.3...v3.4.4) (2026-09-07)
 
 
