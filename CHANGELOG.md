@@ -1,5 +1,14 @@
 # Changelog
 
+## [3.4.5](https://github.com/X3ru4/boole.nvim/compare/v3.4.4...v3.4.5) (2026-10-08)
+
+
+### Bug Fixes
+
+* **boole:** normalize cursorpos ([d814f50](https://github.com/X3ru4/boole.nvim/commit/d814f50f6e9f81d2246ab4bed25a89a5723c1b0d))
+* correct cursor positioning in boole selection logic by replacing feedkeys with direct cursor set. ([2c85039](https://github.com/X3ru4/boole.nvim/commit/2c850393da3c90b0a9f953b05335c5ad4bdcb98c))
+* remove line count limit check to allow processing of larger selections ([5ba02ec](https://github.com/X3ru4/boole.nvim/commit/5ba02ec1de2d987a26b24c72253040efffaf79f0))
+
 ## [3.4.4](https://github.com/X3ru4/boole.nvim/compare/v3.4.3...v3.4.4) (2026-09-07)
 
 
