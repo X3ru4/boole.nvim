@@ -124,6 +124,8 @@ local function try_match(direction, start_pos, endcol, fallback, visual_mode, mo
 			word = selection
 			start_idx = line:find(selection, start_pos[2] + 1, true)
 		else
+			feedkeys('gvo', keymode, false)
+			feedkeys(KC_ESC, keymode, false)
 			word, start_idx, stop_col = scan_line(line:sub(1, endcol and endcol + 1), true, start_pos, endcol)
 		end
 	else
