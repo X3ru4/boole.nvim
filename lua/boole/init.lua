@@ -1,9 +1,9 @@
 ---@class boole.config
----@field presets string[]|nil
----@field allow_caps_additions string[][]|nil
----@field additions string[][]|nil
----@field use_default_mappings boolean|nil
----@field maximum_loop integer|nil
+---@field presets string[]?
+---@field allow_caps_additions string[][]?
+---@field additions string[][]?
+---@field use_default_mappings boolean?
+---@field maximum_loop integer|false?
 
 local M = {}
 local replace_map = { increment = {}, decrement = {} }
@@ -19,7 +19,7 @@ local set_cursor = vim.api.nvim_win_set_cursor
 local expand = vim.fn.expand
 local getpos = vim.fn.getpos
 
-local MAXIMUM_LOOP = 1024
+local maximun_loop = 1024
 local KC_CTRL_A = vim.keycode('<C-a>')
 local KC_CTRL_X = vim.keycode('<C-x>')
 local KC_ESC = vim.keycode('<Esc>')
@@ -86,7 +86,7 @@ end
 
 local function scan_line(line, move_back, start_pos, end_col)
 	local pre_col = -1
-	for _ = 1, MAXIMUM_LOOP do
+	for _ = 1, maximun_loop do
 		local cword = expand('<cword>')
 		local current_pos = get_cursor(0)
 
@@ -295,7 +295,9 @@ function M.setup(opts)
 	end
 
 	if opts.maximum_loop and opts.maximum_loop > 0 then
-		MAXIMUM_LOOP = opts.maximum_loop
+		maximun_loop = opts.maximum_loop
+	elseif opts.maximum_loop == false then
+		maximun_loop = 123456789
 	end
 
 	if opts.presets then
