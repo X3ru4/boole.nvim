@@ -1,3 +1,10 @@
+---@class boole.config
+---@field presets string[]|nil
+---@field allow_caps_additions string[][]|nil
+---@field additions string[][]|nil
+---@field use_default_mappings boolean|nil
+---@field maximum_loop integer|nil
+
 local M = {}
 local replace_map = { increment = {}, decrement = {} }
 local match_words = {}
